@@ -1,0 +1,46 @@
+name: Smoke Tests
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  smoke-tests:
+    name: Playwright Smoke Tests
+    runs-on: ubuntu-latest
+
+    env:
+      UI_BASE_URL: ${{ vars.UI_BASE_URL }}
+      API_URL: ${{ vars.API_URL }}
+      AWS_REGION: ${{ vars.AWS_REGION }}
+      COGNITO_CLIENT_ID: ${{ vars.COGNITO_CLIENT_ID }}
+      COGNITO_USERNAME: ${{ vars.COGNITO_USERNAME }}
+      COGNITO_PASSWORD: ${{ secrets.COGNITO_PASSWORD }}
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Install Chromium
+        run: npx playwright install --with-deps chromium
+
+      - name: Run smoke tests
+        run: npx playwright test --grep "@smoke"
+
+      - name: Upload Playwright report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: smoke-test-report
+          path: playwright-report/
+          retention-days: 7

@@ -1,0 +1,17 @@
+# Dependencies
+node_modules/
+
+# Playwright
+/test-results/
+/playwright-report/
+/blob-report/
+/playwright/.cache/
+/playwright/.auth/
+
+# Environment / secrets
+.env
+.act.vars
+.act.secrets
+
+# macOS
+.DS_Store

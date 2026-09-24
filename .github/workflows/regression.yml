@@ -1,0 +1,56 @@
+name: Regression Tests
+
+on:
+  pull_request:
+    branches:
+      - main
+
+  workflow_dispatch:
+
+jobs:
+  regression:
+    name: Full Playwright Regression
+    runs-on: ubuntu-latest
+
+    env:
+      UI_BASE_URL: ${{ vars.UI_BASE_URL }}
+      API_URL: ${{ vars.API_URL }}
+      AWS_REGION: ${{ vars.AWS_REGION }}
+      COGNITO_CLIENT_ID: ${{ vars.COGNITO_CLIENT_ID }}
+      COGNITO_USERNAME: ${{ vars.COGNITO_USERNAME }}
+      COGNITO_PASSWORD: ${{ secrets.COGNITO_PASSWORD }}
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Install Chromium
+        run: npx playwright install --with-deps chromium
+
+      - name: Run regression suite
+        run: npx playwright test
+
+      - name: Upload Playwright report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: regression-report
+          path: playwright-report/
+          retention-days: 14
+
+      - name: Upload failed test evidence
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: regression-test-results
+          path: test-results/
+          retention-days: 14
